@@ -1,9 +1,12 @@
-#include <stdio.h>
+#include <arpa/inet.h>
+#include <fcntl.h>
+#include <stdbool.h>
 #include <stdint.h>
+#include <stdio.h>
+#include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <arpa/inet.h>
-#include <stdbool.h>
+#include <termios.h>
 #include <unistd.h>
 
 int setupServer()
@@ -24,7 +27,8 @@ int setupServer()
    // Set port and IP:
    server_addr.sin_family = AF_INET;
    server_addr.sin_port = htons(5555);
-   server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+   // server_addr.sin_addr.s_addr = inet_addr("127.0.0.1");
+   server_addr.sin_addr.s_addr = inet_addr("192.168.1.107");
 
    // Bind to the set port and IP:
    if(bind(socket_desc, (struct sockaddr*)&server_addr, sizeof(server_addr)) < 0)
@@ -36,18 +40,44 @@ int setupServer()
    return socket_desc;
 }
 
-void testModeEnable()
+int setupSerial()
 {
-   char cmd[1024];
-   snprintf(cmd, sizeof(cmd), "TestMode On\n");
-   printf("%s", cmd);
+   int fd;
+
+   fd = open("/dev/ttyACM0", O_RDWR | O_NOCTTY);
+
+   if(fd < 0)
+   {
+      printf("Error while opening serial port\n");
+      return -1;
+   }
+   printf("Serial connection created successfully\n");
+
+   return fd;
 }
 
-void setMotorCommand(int32_t l_wheel_dist, int32_t r_wheel_dist, int32_t speed)
+void testModeEnable(int serial_desc)
 {
    char cmd[1024];
-   snprintf(cmd, sizeof(cmd), "SetMotor LWheelDist %d RWheelDist %d Speed %d\n", l_wheel_dist, r_wheel_dist, speed);
+   const size_t s = snprintf(cmd, sizeof(cmd), "TestMode On\n");
    printf("%s", cmd);
+   write(serial_desc, cmd, s);
+}
+
+void playSound(int serial_desc, uint8_t sound_id)
+{
+   char cmd[1024];
+   const size_t s = snprintf(cmd, sizeof(cmd), "PlaySound SoundID %d\n", sound_id);
+   printf("%s", cmd);
+   write(serial_desc, cmd, s);
+}
+
+void setMotorCommand(int serial_desc, int32_t l_wheel_dist, int32_t r_wheel_dist, int32_t speed)
+{
+   char cmd[1024];
+   const size_t s = snprintf(cmd, sizeof(cmd), "SetMotor LWheelDist %d RWheelDist %d Speed %d\n", l_wheel_dist, r_wheel_dist, speed);
+   printf("%s", cmd);
+   write(serial_desc, cmd, s);
 }
 
 int main()
@@ -59,12 +89,25 @@ int main()
    memset(msg, '\0', sizeof(msg));
 
    const int socket_desc = setupServer();
+   if(socket_desc < 0)
+   {
+      return 1;
+   }
+
+   const int serial_desc = setupSerial();
+   if(serial_desc < 0)
+   {
+      return 1;
+   }
 
    for(int i = 0; i < 3; ++i)
    {
-      testModeEnable();
+      testModeEnable(serial_desc);
       sleep(2);
    }
+
+   playSound(serial_desc, 0);
+   sleep(2);
 
    // Flush buffer
    recvfrom(socket_desc, msg, sizeof(msg), 0, (struct sockaddr*)&client_addr, &client_struct_length);
@@ -103,7 +146,7 @@ int main()
             memcpy(&s, &msg[i], sizeof(int32_t));
             i += sizeof(int32_t);
 
-            setMotorCommand(l, r, s);
+            setMotorCommand(serial_desc, l, r, s);
             break;
          }
 
