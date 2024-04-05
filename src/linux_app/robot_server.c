@@ -4,6 +4,7 @@
 #include <sys/socket.h>
 #include <arpa/inet.h>
 #include <stdbool.h>
+#include <unistd.h>
 
 int setupServer()
 {
@@ -35,9 +36,18 @@ int setupServer()
    return socket_desc;
 }
 
+void testModeEnable()
+{
+   char cmd[1024];
+   snprintf(cmd, sizeof(cmd), "TestMode On\n");
+   printf("%s", cmd);
+}
+
 void setMotorCommand(int32_t l_wheel_dist, int32_t r_wheel_dist, int32_t speed)
 {
-   printf("SetMotor LWheelDist %d RWheelDist %d Speed %d\n", l_wheel_dist, r_wheel_dist, speed);
+   char cmd[1024];
+   snprintf(cmd, sizeof(cmd), "SetMotor LWheelDist %d RWheelDist %d Speed %d\n", l_wheel_dist, r_wheel_dist, speed);
+   printf("%s", cmd);
 }
 
 int main()
@@ -49,7 +59,19 @@ int main()
    memset(msg, '\0', sizeof(msg));
 
    const int socket_desc = setupServer();
-   
+
+   for(int i = 0; i < 3; ++i)
+   {
+      testModeEnable();
+      sleep(2);
+   }
+
+   // Flush buffer
+   recvfrom(socket_desc, msg, sizeof(msg), 0, (struct sockaddr*)&client_addr, &client_struct_length);
+
+   // Invalidate buffer
+   msg[0] = '\0';
+
    while(true)
    {
       const ssize_t msg_size = recvfrom(socket_desc, msg, sizeof(msg), 0, (struct sockaddr*)&client_addr, &client_struct_length);
@@ -88,6 +110,9 @@ int main()
          default:
             break;
       }
+
+      // Invalidate buffer
+      msg[0] = '\0';
    }
    return 0;
 }
