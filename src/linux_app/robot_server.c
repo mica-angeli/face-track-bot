@@ -6,22 +6,8 @@
 #include <stdlib.h>
 #include <string.h>
 #include <sys/socket.h>
-#include <sys/time.h>
 #include <termios.h>
 #include <unistd.h>
-
-unsigned long long getTime()
-{
-   struct timeval tv;
-
-   gettimeofday(&tv, NULL);
-
-   unsigned long long millisecondsSinceEpoch =
-      (unsigned long long)(tv.tv_sec) * 1000 +
-      (unsigned long long)(tv.tv_usec) / 1000;
-   
-   return millisecondsSinceEpoch;
-}
 
 int setupServer()
 {
@@ -134,10 +120,6 @@ int main()
    // Invalidate buffer
    msg[0] = '\0';
 
-   const unsigned long long period = 100;
-
-   unsigned long long last_time = getTime() + period;
-
    while(true)
    {
       const ssize_t msg_size = recvfrom(socket_desc, msg, sizeof(msg), 0, (struct sockaddr*)&client_addr, &client_struct_length);
@@ -146,17 +128,6 @@ int main()
          printf("Couldn't receive\n");
          return -1;
       }
-
-      const unsigned long long curr_time = getTime();
-      printf("%llu\n", curr_time);
-      if((last_time + period) < curr_time)
-      {
-         // Invalidate buffer
-         msg[0] = '\0';
-         continue;
-      }
-
-      last_time = curr_time;
 
       // Insert null char
       msg[msg_size] = '\0';
