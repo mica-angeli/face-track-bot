@@ -56,7 +56,9 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     }
     
     // Other settings
-    private let detectionXTolerance = 0.1
+    private let detectionXTolerance = 0.05
+    private let detectionMinWidth = 0.15
+    private let detectionMaxWidth = 0.2
     
     // MARK: UIViewController overrides
     
@@ -510,15 +512,36 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
             return RobotCommand()
         }
         var cmd = RobotCommand()
+        
+//        if let commandLayer = self.commandLayer {
+//            commandLayer.string = "\(d.boundingBox.size.width)"
+//        }
 
         let x: Double = d.boundingBox.midX
-        let diff = x - 0.5
-        if abs(diff) > self.detectionXTolerance {
-            let dist = Int32(diff * 100)
-            cmd.lWheelDist = dist
-            cmd.rWheelDist = -dist
-            cmd.speed = 100
+        let s: Double = d.boundingBox.size.width
+
+        var diff: Double = 0
+        if x > (0.5 + self.detectionXTolerance) || x < (0.5 - self.detectionXTolerance) {
+            diff = x - 0.5
         }
+        
+        var forward: Double = 0
+        if s < self.detectionMinWidth || s > self.detectionMaxWidth {
+            forward = s - ((self.detectionMaxWidth - self.detectionMinWidth) / 2.0) - self.detectionMinWidth
+        }
+        
+        if diff == 0 && forward == 0
+        {
+            return cmd;
+        }
+        
+        diff *= 100
+        forward *= -100
+
+        cmd.lWheelDist = Int32(forward - diff)
+        cmd.rWheelDist = Int32(forward + diff)
+        cmd.speed = 100
+
         return cmd;
     }
     
