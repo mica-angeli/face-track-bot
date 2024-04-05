@@ -56,7 +56,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
     }
     
     // Other settings
-    private let detectionXTolerance = 0.05
+    private let detectionXTolerance = 0.1
     private let detectionMinWidth = 0.15
     private let detectionMaxWidth = 0.2
     
@@ -536,7 +536,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         }
         
         diff *= 100
-        forward *= -100
+        forward *= -500
 
         cmd.lWheelDist = Int32(forward - diff)
         cmd.rWheelDist = Int32(forward + diff)
