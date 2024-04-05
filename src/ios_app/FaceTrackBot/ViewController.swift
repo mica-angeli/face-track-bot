@@ -173,7 +173,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         
         // Create a serial dispatch queue used for the sample buffer delegate as well as when a still image is captured.
         // A serial dispatch queue must be used to guarantee that video frames will be delivered in order.
-        let videoDataOutputQueue = DispatchQueue(label: "com.example.apple-samplecode.VisionFaceTrack")
+        let videoDataOutputQueue = DispatchQueue(label: "com.example.apple-samplecode.FaceTrackBot")
         videoDataOutput.setSampleBufferDelegate(self, queue: videoDataOutputQueue)
         
         if captureSession.canAddOutput(videoDataOutput) {
