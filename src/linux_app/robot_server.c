@@ -44,7 +44,7 @@ int setupSerial()
 {
    int fd;
 
-   fd = open("/dev/ttyACM0", O_RDWR | O_NOCTTY);
+   fd = open("/dev/ttyACM1", O_RDWR | O_NOCTTY);
 
    if(fd < 0)
    {
@@ -106,8 +106,8 @@ int main()
       sleep(2);
    }
 
-   playSound(serial_desc, 0);
-   sleep(2);
+   // playSound(serial_desc, 0);
+   // sleep(2);
 
    // Flush buffer
    recvfrom(socket_desc, msg, sizeof(msg), 0, (struct sockaddr*)&client_addr, &client_struct_length);
