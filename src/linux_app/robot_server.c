@@ -44,7 +44,7 @@ int setupSerial()
 {
    int fd;
 
-   fd = open("/dev/ttyACM1", O_RDWR | O_NOCTTY);
+   fd = open("/dev/ttyACM0", O_RDWR | O_NOCTTY);
 
    if(fd < 0)
    {
