@@ -48,6 +48,11 @@ int setupSerial()
 
    if(fd < 0)
    {
+      fd = open("/dev/ttyACM1", O_RDWR | O_NOCTTY);
+   }
+
+   if(fd < 0)
+   {
       printf("Error while opening serial port\n");
       return -1;
    }
