@@ -11,9 +11,9 @@ import AVKit
 import Vision
 
 struct RobotCommand {
-    var lWheelDist: Int = 0
-    var rWheelDist: Int = 0
-    var speed: Int = 0
+    var lWheelDist: Int32 = 0
+    var rWheelDist: Int32 = 0
+    var speed: Int32 = 0
 }
 
 class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDelegate {
@@ -514,7 +514,7 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         let x: Double = d.boundingBox.midX
         let diff = x - 0.5
         if abs(diff) > self.detectionXTolerance {
-            let dist = Int(diff * 100)
+            let dist = Int32(diff * 100)
             cmd.lWheelDist = dist
             cmd.rWheelDist = -dist
             cmd.speed = 100
@@ -529,11 +529,21 @@ class ViewController: UIViewController, AVCaptureVideoDataOutputSampleBufferDele
         if let commandLayer = self.commandLayer {
             commandLayer.string = cmdStr
         }
-        
-        if let connection = self.connection {
-            connection.send(content: cmdStr.data(using: .ascii), completion: self.connectionResultHandler)
+
+        var data = Data()
+        if let c = "m".data(using: .ascii){
+            data.append(c)
+            let l = withUnsafeBytes(of: command.lWheelDist) { Data($0) }
+            data.append(l)
+            let r = withUnsafeBytes(of: command.rWheelDist) { Data($0) }
+            data.append(r)
+            let s = withUnsafeBytes(of: command.speed) { Data($0) }
+            data.append(s)
         }
         
+        if let connection = self.connection {
+            connection.send(content: data, completion: self.connectionResultHandler)
+        }
     }
     
     // MARK: AVCaptureVideoDataOutputSampleBufferDelegate
